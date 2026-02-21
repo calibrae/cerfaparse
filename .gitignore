@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+
+# BMAD method framework (not part of this project)
+_bmad/
+_bmad-output/
+.ralph/
+bmalph/
+.claude/
+
+# Generated fillable PDFs (keep JSON field definitions)
+docs/*-fillable.pdf
+
+# Test temp output
+/tmp/
