@@ -1,7 +1,12 @@
-import type { Field, Label, PdfRect } from './types.js';
+import type { Field, FieldType, Label, PdfRect } from './types.js';
 import type { FieldGroup } from './group-rows.js';
 import { svgBoxToPdfRect } from './transform.js';
 import type { TransformMatrix } from './types.js';
+
+/** Map internal box type to formly-compatible field type */
+function toFieldType(boxType: 'cell' | 'checkbox'): FieldType {
+  return boxType === 'cell' ? 'input' : 'checkbox';
+}
 
 /** Max Y-distance (PDF pts) for a label to be considered "above" a field row */
 const LABEL_Y_MAX_DISTANCE = 25;
@@ -43,16 +48,15 @@ export function mapLabelsToFields(
     usedNames.add(name);
 
     const field: Field = {
-      name,
-      type: group.row.type,
-      label: labelText,
-      page,
-      pdfRect,
+      key: name,
+      type: toFieldType(group.row.type),
+      props: {
+        label: labelText,
+        page,
+        pdfRect,
+        ...(group.row.type === 'cell' ? { maxLength: group.boxCount } : {}),
+      },
     };
-
-    if (group.row.type === 'cell') {
-      field.maxLength = group.boxCount;
-    }
 
     fields.push(field);
   }

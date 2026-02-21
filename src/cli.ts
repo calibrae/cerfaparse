@@ -49,7 +49,7 @@ export async function convert(inputPath: string, outputPath?: string): Promise<{
     const labels = labelsByPage.get(page) ?? [];
     const fields = mapLabelsToFields(fieldGroups, labels, transform, page, pageHeight);
 
-    const cellCount = fields.filter((f) => f.type === 'cell').length;
+    const cellCount = fields.filter((f) => f.type === 'input').length;
     const checkboxCount = fields.filter((f) => f.type === 'checkbox').length;
     console.log(`  Page ${page}: ${cellCount} text fields, ${checkboxCount} checkboxes`);
 
@@ -66,7 +66,7 @@ export async function convert(inputPath: string, outputPath?: string): Promise<{
   const output: FieldOutput = {
     pages: Array.from({ length: pageCount }, (_, i) => ({
       pageNumber: i + 1,
-      fields: allFields.filter((f) => f.page === i + 1),
+      fields: allFields.filter((f) => f.props.page === i + 1),
     })),
   };
   await writeFile(jsonOut, JSON.stringify(output, null, 2));

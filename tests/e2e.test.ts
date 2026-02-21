@@ -50,7 +50,7 @@ describe('E2E: full pipeline on sample CERFA', () => {
     output = {
       pages: Array.from({ length: pageCount }, (_, i) => ({
         pageNumber: i + 1,
-        fields: allFields.filter((f) => f.page === i + 1),
+        fields: allFields.filter((f) => f.props.page === i + 1),
       })),
     };
     await writeFile(outputJson, JSON.stringify(output, null, 2));
@@ -86,29 +86,29 @@ describe('E2E: full pipeline on sample CERFA', () => {
     expect(page2.length).toBeLessThanOrEqual(130);
   });
 
-  it('all fields have non-empty names', () => {
+  it('all fields have non-empty keys', () => {
     for (const field of allFields) {
-      expect(field.name).toBeTruthy();
+      expect(field.key).toBeTruthy();
     }
   });
 
-  it('all field names are unique', () => {
-    const names = allFields.map((f) => f.name);
-    expect(new Set(names).size).toBe(names.length);
+  it('all field keys are unique', () => {
+    const keys = allFields.map((f) => f.key);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
   it('all pdfRects have positive dimensions', () => {
     for (const field of allFields) {
-      expect(field.pdfRect.width).toBeGreaterThan(0);
-      expect(field.pdfRect.height).toBeGreaterThan(0);
+      expect(field.props.pdfRect.width).toBeGreaterThan(0);
+      expect(field.props.pdfRect.height).toBeGreaterThan(0);
     }
   });
 
-  it('cell fields have maxLength > 0', () => {
-    const cells = allFields.filter((f) => f.type === 'cell');
+  it('input fields have maxLength > 0', () => {
+    const cells = allFields.filter((f) => f.type === 'input');
     expect(cells.length).toBeGreaterThan(0);
     for (const cell of cells) {
-      expect(cell.maxLength).toBeGreaterThan(0);
+      expect(cell.props.maxLength).toBeGreaterThan(0);
     }
   });
 

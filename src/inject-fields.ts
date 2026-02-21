@@ -30,23 +30,23 @@ export async function injectFields(
   const pages = pdfDoc.getPages();
 
   for (const field of fields) {
-    const pageIndex = field.page - 1;
+    const pageIndex = field.props.page - 1;
     if (pageIndex < 0 || pageIndex >= pages.length) continue;
     const page = pages[pageIndex];
-    const { x, y, width, height } = field.pdfRect;
+    const { x, y, width, height } = field.props.pdfRect;
 
-    if (field.type === 'cell') {
-      const textField = form.createTextField(field.name);
+    if (field.type === 'input') {
+      const textField = form.createTextField(field.key);
       textField.addToPage(page, { x, y, width, height, font, borderWidth: 0 });
-      if (field.maxLength) {
-        textField.setMaxLength(field.maxLength);
+      if (field.props.maxLength) {
+        textField.setMaxLength(field.props.maxLength);
         textField.enableCombing();
       }
       textField.setFontSize(0); // auto-size
       clearWidgetAppearance(textField.acroField);
       textField.updateAppearances(font);
     } else {
-      const checkbox = form.createCheckBox(field.name);
+      const checkbox = form.createCheckBox(field.key);
       checkbox.addToPage(page, { x, y, width, height, borderWidth: 0 });
       clearWidgetAppearance(checkbox.acroField);
       checkbox.updateAppearances();

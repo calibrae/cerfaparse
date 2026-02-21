@@ -45,7 +45,9 @@ This produces:
 - `/tmp/cs8-fillable.pdf` — the original PDF with overlay AcroForm fields
 - `/tmp/cs8-fillable.fields.json` — JSON field definitions
 
-## JSON Output Format
+## JSON Output Format (ngx-formly compatible)
+
+The output JSON uses [ngx-formly](https://formly.dev/)-compatible field definitions (`key`, `type`, `props`) with spatial metadata embedded in `props`:
 
 ```json
 {
@@ -54,19 +56,23 @@ This produces:
       "pageNumber": 1,
       "fields": [
         {
-          "name": "p1_nom",
-          "type": "cell",
-          "label": "Nom :",
-          "page": 1,
-          "pdfRect": { "x": 50.4, "y": 505.6, "width": 104.1, "height": 10.9 },
-          "maxLength": 9
+          "key": "p1_nom",
+          "type": "input",
+          "props": {
+            "label": "Nom :",
+            "maxLength": 9,
+            "page": 1,
+            "pdfRect": { "x": 50.4, "y": 505.6, "width": 104.1, "height": 10.9 }
+          }
         },
         {
-          "name": "p1_oui",
+          "key": "p1_oui",
           "type": "checkbox",
-          "label": "Oui",
-          "page": 1,
-          "pdfRect": { "x": 288.1, "y": 472.3, "width": 8.0, "height": 8.0 }
+          "props": {
+            "label": "Oui",
+            "page": 1,
+            "pdfRect": { "x": 288.1, "y": 472.3, "width": 8.0, "height": 8.0 }
+          }
         }
       ]
     }
@@ -76,10 +82,10 @@ This produces:
 
 ### Field types
 
-| Type | Description | Extra fields |
-|------|-------------|-------------|
-| `cell` | Character cell input (one char per box) | `maxLength` — number of character cells |
-| `checkbox` | Checkbox | — |
+| Type | Description | Props |
+|------|-------------|-------|
+| `input` | Text input — rendered as free-form in formly, mapped to one-char-per-box (combed) in PDF when `maxLength` is set | `maxLength`, `label`, `page`, `pdfRect` |
+| `checkbox` | Checkbox | `label`, `page`, `pdfRect` |
 
 ## Library Usage (Node.js)
 
@@ -98,24 +104,18 @@ import { extractSvg } from 'cerfaparse';
 
 ## Using with Angular / ngx-formly
 
-The JSON output is designed to drive dynamic forms. Run `convert` at build time, then use the JSON in your Angular app:
+The JSON output is directly compatible with [ngx-formly](https://formly.dev/). Run `convert` at build time, then use the JSON fields as-is:
 
 ```typescript
 // Load the generated JSON
 import fieldDefs from './assets/cerfa-cs8.fields.json';
 
-// Map to ngx-formly field config
-const formlyFields = fieldDefs.pages.flatMap(page =>
-  page.fields.map(field => ({
-    key: field.name,
-    type: field.type === 'cell' ? 'input' : 'checkbox',
-    props: {
-      label: field.label,
-      maxLength: field.maxLength,
-    },
-  }))
-);
+// Fields are already formly-compatible — just flatten across pages
+const formlyFields = fieldDefs.pages.flatMap(page => page.fields);
+// Each field has: { key, type, props: { label, maxLength?, page, pdfRect } }
 ```
+
+Fields use standard formly types (`input`, `checkbox`). The `maxLength` prop constrains input length in the form; when filling the PDF, `maxLength` triggers combed rendering (one character per cell).
 
 To fill the PDF client-side with [pdf-lib](https://pdf-lib.js.org/) (works in the browser):
 
@@ -127,9 +127,9 @@ const pdfDoc = await PDFDocument.load(pdfBytes);
 const form = pdfDoc.getForm();
 
 for (const [key, value] of Object.entries(formValues)) {
-  const field = fieldDefs.pages.flatMap(p => p.fields).find(f => f.name === key);
+  const field = fieldDefs.pages.flatMap(p => p.fields).find(f => f.key === key);
   if (!field) continue;
-  if (field.type === 'cell') {
+  if (field.type === 'input') {
     form.getTextField(key).setText(String(value));
   } else {
     const cb = form.getCheckBox(key);

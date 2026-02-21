@@ -9,6 +9,7 @@ export { checkPoppler, extractSvg, extractBbox, getPageCount } from './poppler.j
 export type {
   SvgBox,
   BoxType,
+  FieldType,
   PdfRect,
   BoxRow,
   Label,

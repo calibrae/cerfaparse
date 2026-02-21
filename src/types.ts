@@ -9,6 +9,9 @@ export interface TransformMatrix {
 
 export type BoxType = 'cell' | 'checkbox';
 
+/** Formly-compatible field types */
+export type FieldType = 'input' | 'checkbox';
+
 export interface SvgBox {
   x: number;
   y: number;
@@ -40,13 +43,16 @@ export interface Label {
   page: number;
 }
 
+/** Formly-compatible field definition with spatial metadata */
 export interface Field {
-  name: string;
-  type: BoxType;
-  label: string;
-  page: number;
-  pdfRect: PdfRect;
-  maxLength?: number;
+  key: string;
+  type: FieldType;
+  props: {
+    label: string;
+    maxLength?: number;
+    page: number;
+    pdfRect: PdfRect;
+  };
 }
 
 export interface PageData {

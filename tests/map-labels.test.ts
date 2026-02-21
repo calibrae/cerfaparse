@@ -53,10 +53,10 @@ describe('mapLabelsToFields', () => {
     const fields = mapLabelsToFields(groups, labels, IDENTITY_MATRIX, 1, PAGE_HEIGHT);
 
     expect(fields).toHaveLength(1);
-    expect(fields[0].name).toBe('p1_nom');
-    expect(fields[0].label).toBe('Nom :');
-    expect(fields[0].maxLength).toBe(5);
-    expect(fields[0].type).toBe('cell');
+    expect(fields[0].key).toBe('p1_nom');
+    expect(fields[0].props.label).toBe('Nom :');
+    expect(fields[0].props.maxLength).toBe(5);
+    expect(fields[0].type).toBe('input');
   });
 
   it('generates unique names for duplicate labels', () => {
@@ -68,8 +68,8 @@ describe('mapLabelsToFields', () => {
     const fields = mapLabelsToFields(groups, labels, IDENTITY_MATRIX, 1, PAGE_HEIGHT);
 
     expect(fields).toHaveLength(2);
-    expect(fields[0].name).toBe('p1_nom');
-    expect(fields[1].name).toBe('p1_nom_2');
+    expect(fields[0].key).toBe('p1_nom');
+    expect(fields[1].key).toBe('p1_nom_2');
   });
 
   it('falls back to positional name when no label matches', () => {
@@ -78,8 +78,8 @@ describe('mapLabelsToFields', () => {
     const fields = mapLabelsToFields(groups, labels, IDENTITY_MATRIX, 1, PAGE_HEIGHT);
 
     expect(fields).toHaveLength(1);
-    expect(fields[0].name).toBe('p1_field');
-    expect(fields[0].label).toBe('');
+    expect(fields[0].key).toBe('p1_field');
+    expect(fields[0].props.label).toBe('');
   });
 
   it('handles checkbox fields (no maxLength)', () => {
@@ -89,7 +89,7 @@ describe('mapLabelsToFields', () => {
 
     expect(fields).toHaveLength(1);
     expect(fields[0].type).toBe('checkbox');
-    expect(fields[0].maxLength).toBeUndefined();
+    expect(fields[0].props.maxLength).toBeUndefined();
   });
 
   it('strips diacritics from field names', () => {
@@ -97,6 +97,6 @@ describe('mapLabelsToFields', () => {
     const labels = [makeLabel('Prénom :', 10, 45)];
     const fields = mapLabelsToFields(groups, labels, IDENTITY_MATRIX, 1, PAGE_HEIGHT);
 
-    expect(fields[0].name).toBe('p1_prenom');
+    expect(fields[0].key).toBe('p1_prenom');
   });
 });
