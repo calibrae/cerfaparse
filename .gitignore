@@ -9,10 +9,9 @@ _bmad-output/
 .ralph/
 bmalph/
 .claude/
+CLAUDE.md
 
-# Generated fillable PDFs and JSON field definitions
-docs/*-fillable.pdf
-docs/*.fields.json
+docs/
 
 # Test temp output
 /tmp/
