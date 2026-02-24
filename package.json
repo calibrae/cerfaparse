@@ -12,15 +12,27 @@
     }
   },
   "bin": {
-    "cerfaparse": "./dist/cli.js"
+    "cerfaparse": "dist/cli.js"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/calibrae/cerfaparse.git"
+    "url": "git+https://github.com/calibrae/cerfaparse.git"
   },
-  "keywords": ["cerfa", "pdf", "acroform", "fillable", "form", "france"],
-  "files": ["dist", "README.md", "README.fr.md", "LICENSE"],
+  "keywords": [
+    "cerfa",
+    "pdf",
+    "acroform",
+    "fillable",
+    "form",
+    "france"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "README.fr.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=20"
   },
