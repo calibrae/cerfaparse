@@ -28,19 +28,19 @@ sudo apt-get install poppler-utils
 ## Install
 
 ```bash
-npm install
+npm install cerfaparse
 ```
 
 ## CLI Usage
 
 ```bash
-npx tsx src/cli.ts convert <input.pdf> [-o <output.pdf>]
+npx cerfaparse convert <input.pdf> [-o <output.pdf>]
 ```
 
 Example:
 
 ```bash
-npx tsx src/cli.ts convert docs/pdf-cerfa_cs8_bleu-recto-verso-140x202mm.pdf -o /tmp/cs8-fillable.pdf
+npx cerfaparse convert docs/pdf-cerfa_cs8_bleu-recto-verso-140x202mm.pdf -o /tmp/cs8-fillable.pdf
 ```
 
 This produces:
