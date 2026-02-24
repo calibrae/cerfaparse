@@ -1,3 +1,5 @@
+[English](README.md) | [Fran&#231;ais](README.fr.md)
+
 # cerfaparse
 
 Convert flat (non-interactive) French CERFA PDF forms into fillable AcroForm PDFs with JSON field definitions.
