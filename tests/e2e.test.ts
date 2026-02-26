@@ -9,6 +9,7 @@ import { extractLabels } from '../src/extract-labels.js';
 import { groupBoxesIntoFields } from '../src/group-rows.js';
 import { mapLabelsToFields } from '../src/map-labels.js';
 import { injectFields } from '../src/inject-fields.js';
+import { extractDotLineFields } from '../src/extract-dot-lines.js';
 import type { Field, FieldOutput } from '../src/types.js';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures');
@@ -32,13 +33,27 @@ describe('E2E: full pipeline on sample CERFA', () => {
     const labelsByPage = extractLabels(bboxHtml);
 
     allFields = [];
+    const usedNames = new Set<string>();
     for (let page = 1; page <= pageCount; page++) {
       const svgXml = await extractSvg(INPUT_PDF, page);
       const { boxes, transform, pageHeight } = extractBoxes(svgXml);
-      const fieldGroups = groupBoxesIntoFields(boxes, page);
       const labels = labelsByPage.get(page) ?? [];
-      const fields = mapLabelsToFields(fieldGroups, labels, transform, page, pageHeight);
-      allFields.push(...fields);
+
+      // Detect dot-line free-text fields
+      const { fields: dotFields, consumedLabelIndices } = extractDotLineFields(
+        labels, page, pageHeight, usedNames,
+      );
+      for (const f of dotFields) usedNames.add(f.key);
+
+      const remainingLabels = labels.filter((_, i) => !consumedLabelIndices.has(i));
+
+      if (transform && boxes.length > 0) {
+        const fieldGroups = groupBoxesIntoFields(boxes, page);
+        const fields = mapLabelsToFields(fieldGroups, remainingLabels, transform, page, pageHeight, usedNames);
+        for (const f of fields) usedNames.add(f.key);
+        allFields.push(...fields);
+      }
+      allFields.push(...dotFields);
     }
 
     // Write output PDF
@@ -80,10 +95,10 @@ describe('E2E: full pipeline on sample CERFA', () => {
     expect(page1.length).toBeLessThanOrEqual(70);
   });
 
-  it('page 2 has reasonable field count (50-130)', () => {
+  it('page 2 has reasonable field count (50-140)', () => {
     const page2 = output.pages[1].fields;
     expect(page2.length).toBeGreaterThanOrEqual(50);
-    expect(page2.length).toBeLessThanOrEqual(130);
+    expect(page2.length).toBeLessThanOrEqual(140);
   });
 
   it('all fields have non-empty keys', () => {
@@ -104,11 +119,20 @@ describe('E2E: full pipeline on sample CERFA', () => {
     }
   });
 
-  it('input fields have maxLength > 0', () => {
-    const cells = allFields.filter((f) => f.type === 'input');
+  it('combed input fields have maxLength > 0', () => {
+    const cells = allFields.filter((f) => f.type === 'input' && f.props.maxLength !== undefined);
     expect(cells.length).toBeGreaterThan(0);
     for (const cell of cells) {
       expect(cell.props.maxLength).toBeGreaterThan(0);
+    }
+  });
+
+  it('dot-line fields exist and have no maxLength', () => {
+    const dotFields = allFields.filter((f) => f.type === 'input' && f.props.maxLength === undefined);
+    expect(dotFields.length).toBeGreaterThan(0);
+    for (const field of dotFields) {
+      expect(field.props.pdfRect.width).toBeGreaterThan(0);
+      expect(field.props.pdfRect.height).toBeGreaterThan(0);
     }
   });
 

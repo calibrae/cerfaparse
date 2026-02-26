@@ -5,8 +5,9 @@ import { checkPoppler, extractBbox, extractSvg, getPageCount } from './poppler.j
 import { extractBoxes } from './extract-boxes.js';
 import { extractLabels } from './extract-labels.js';
 import { groupBoxesIntoFields } from './group-rows.js';
-import { mapLabelsToFields } from './map-labels.js';
+import { mapLabelsToFields, generateFieldName, deduplicateName } from './map-labels.js';
 import { injectFields } from './inject-fields.js';
+import { extractDotLineFields } from './extract-dot-lines.js';
 import type { Field, FieldOutput } from './types.js';
 
 export async function convert(inputPath: string, outputPath?: string): Promise<{
@@ -40,20 +41,40 @@ export async function convert(inputPath: string, outputPath?: string): Promise<{
     const svgXml = await extractSvg(inputPath, page);
     const { boxes, transform, pageHeight } = extractBoxes(svgXml);
 
+    const labels = labelsByPage.get(page) ?? [];
+
+    // Detect dot-line free-text fields
+    const usedNames = new Set<string>(allFields.map((f) => f.key));
+    const { fields: dotFields, consumedLabelIndices } = extractDotLineFields(
+      labels, page, pageHeight, usedNames,
+    );
+
+    // Filter consumed dot labels before passing to SVG-based pipeline
+    const remainingLabels = labels.filter((_, i) => !consumedLabelIndices.has(i));
+
     if (!transform || boxes.length === 0) {
-      console.log(`  Page ${page}: no input boxes found, skipping`);
+      if (dotFields.length === 0) {
+        console.log(`  Page ${page}: no input boxes found, skipping`);
+        continue;
+      }
+      // Page has dot-line fields but no SVG boxes
+      const freeTextCount = dotFields.length;
+      console.log(`  Page ${page}: ${freeTextCount} free-text field(s)`);
+      allFields.push(...dotFields);
       continue;
     }
 
     const fieldGroups = groupBoxesIntoFields(boxes, page);
-    const labels = labelsByPage.get(page) ?? [];
-    const fields = mapLabelsToFields(fieldGroups, labels, transform, page, pageHeight);
+    // Add dot-line names to usedNames so SVG fields don't collide
+    for (const f of dotFields) usedNames.add(f.key);
+    const fields = mapLabelsToFields(fieldGroups, remainingLabels, transform, page, pageHeight, usedNames);
 
     const cellCount = fields.filter((f) => f.type === 'input').length;
     const checkboxCount = fields.filter((f) => f.type === 'checkbox').length;
-    console.log(`  Page ${page}: ${cellCount} text fields, ${checkboxCount} checkboxes`);
+    const freeTextCount = dotFields.length;
+    console.log(`  Page ${page}: ${cellCount} text fields, ${checkboxCount} checkboxes${freeTextCount ? `, ${freeTextCount} free-text field(s)` : ''}`);
 
-    allFields.push(...fields);
+    allFields.push(...fields, ...dotFields);
   }
 
   // 6. Inject AcroForm fields into PDF

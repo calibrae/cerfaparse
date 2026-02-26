@@ -50,6 +50,7 @@ export interface Field {
   props: {
     label: string;
     maxLength?: number;
+    multiline?: boolean;
     page: number;
     pdfRect: PdfRect;
   };

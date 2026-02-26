@@ -42,6 +42,9 @@ export async function injectFields(
         textField.setMaxLength(field.props.maxLength);
         textField.enableCombing();
       }
+      if (field.props.multiline) {
+        textField.enableMultiline();
+      }
       textField.setFontSize(0); // auto-size
       clearWidgetAppearance(textField.acroField);
       textField.updateAppearances(font);

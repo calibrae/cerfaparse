@@ -34,9 +34,10 @@ export function mapLabelsToFields(
   transform: TransformMatrix,
   page: number,
   pageHeight: number,
+  usedNames?: Set<string>,
 ): Field[] {
   const fields: Field[] = [];
-  const usedNames = new Set<string>();
+  const names = usedNames ?? new Set<string>();
 
   for (const group of fieldGroups) {
     const pdfRect = computeGroupPdfRect(group, transform, pageHeight);
@@ -44,8 +45,8 @@ export function mapLabelsToFields(
     const labelText = bestLabel?.text ?? '';
 
     const baseName = generateFieldName(labelText, group.row.type, page);
-    const name = deduplicateName(baseName, usedNames);
-    usedNames.add(name);
+    const name = deduplicateName(baseName, names);
+    names.add(name);
 
     const field: Field = {
       key: name,
@@ -117,7 +118,7 @@ function findBestLabel(fieldRect: PdfRect, labels: Label[], pageHeight: number):
   return bestLabel;
 }
 
-function generateFieldName(
+export function generateFieldName(
   labelText: string,
   _type: 'cell' | 'checkbox',
   page: number,
@@ -148,7 +149,7 @@ function generateFieldName(
   return `p${page}_${camel}`;
 }
 
-function deduplicateName(baseName: string, used: Set<string>): string {
+export function deduplicateName(baseName: string, used: Set<string>): string {
   if (!used.has(baseName)) return baseName;
   let counter = 2;
   while (used.has(`${baseName}_${counter}`)) counter++;
